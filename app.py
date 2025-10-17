@@ -82,11 +82,11 @@ if menu == "Dashboard":
             mime="text/csv",
             key="download_csv_all"
         )
-
+        
         # ====== SOROTAN TERBARU ======
         st.subheader("📰 Sorotan Terbaru")
         latest = df.sort_values("Tanggal", ascending=False).head(3)
-
+        
         for _, row in latest.iterrows():
             c1, c2 = st.columns([2, 1])
             with c1:
@@ -101,21 +101,32 @@ if menu == "Dashboard":
                     mime="application/pdf",
                     key=f"pdf_{row['No']}"
                 )
-
+        
             with c2:
                 img_url = row.get("Gambar", "")
                 if img_url:
                     try:
+                        # ✅ logika sama seperti bagian "Download Berdasarkan Tanggal"
                         headers = {"User-Agent": "Mozilla/5.0"}
                         response = requests.get(img_url, headers=headers, timeout=8)
                         if response.status_code == 200:
                             st.image(img_url, use_container_width=True)
                         else:
-                            st.caption("⚠️ Gambar tidak tersedia.")
+                            st.markdown(
+                                "<p style='color: gray;'>⚠️ Gambar tidak tersedia</p>",
+                                unsafe_allow_html=True
+                            )
                     except Exception:
-                        st.caption("⚠️ Gagal memuat gambar.")
+                        st.markdown(
+                            "<p style='color: gray;'>⚠️ Gagal memuat gambar</p>",
+                            unsafe_allow_html=True
+                        )
                 else:
-                    st.caption("📷 Tidak ada dokumentasi foto.")
+                    st.markdown(
+                        "<p style='color: gray;'>📷 Tidak ada dokumentasi foto</p>",
+                        unsafe_allow_html=True
+                    )
+
 
         # ====== DOWNLOAD BERDASARKAN TANGGAL ======
         st.subheader("📅 Download Laporan Berdasarkan Tanggal")
@@ -312,4 +323,5 @@ elif menu == "Kelola Data":
                 if st.button("🗑 Hapus Data Ini", type="primary", key=f"del_{selected_id}"):
                     crud.delete_data(selected_id)
                     st.success(f"✅ Data No {selected_id} telah dihapus.")
+
                     st.rerun()
