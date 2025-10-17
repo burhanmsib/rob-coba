@@ -45,7 +45,7 @@ def login():
     with col2:
         st.info(
             "👥 **Panduan Login:**\n"
-            "- **User umum** → username: `user`, password: `user123`\n"
+            "- **User umum** → username: `user`, password: `user123`\n\n"
             "🛈 FOD menggunakan user & pass yang telah diatur."
         )
 
@@ -80,3 +80,4 @@ def logout():
         st.toast("Anda telah logout.", icon="👋")
 
         st.rerun()
+
