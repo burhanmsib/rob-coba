@@ -105,26 +105,27 @@ if menu == "Dashboard":
             with c2:
                 img_url = row.get("Gambar", "")
         
-                # ✅ Langkah 1: Ubah link Drive agar bisa tampil langsung
+                # ✅ Konversi URL Google Drive agar bisa tampil langsung
                 if img_url and "drive.google.com" in img_url:
                     if "uc?id=" not in img_url:
                         if "/d/" in img_url:
                             file_id = img_url.split("/d/")[1].split("/")[0]
                             img_url = f"https://drive.google.com/uc?export=view&id={file_id}"
         
-                # ✅ Langkah 2: Cek apakah bisa diakses
+                # ✅ Cek apakah gambar dapat dimuat
                 if img_url:
                     try:
                         headers = {"User-Agent": "Mozilla/5.0"}
                         response = requests.get(img_url, headers=headers, timeout=8)
                         if response.status_code == 200:
-                            st.image(img_url, use_container_width=True, caption=row["Lokasi"])
+                            st.image(img_url, caption=row["Lokasi"], width=300)
                         else:
                             st.caption("⚠️ Gambar tidak tersedia.")
                     except Exception as e:
-                        st.caption(f"⚠️ Gagal memuat gambar: {e}")
+                        st.caption(f"⚠️ Gagal memuat gambar: {str(e)[:50]}")
                 else:
                     st.caption("📷 Tidak ada dokumentasi foto.")
+
 
         # ====== DOWNLOAD BERDASARKAN TANGGAL ======
         st.subheader("📅 Download Laporan Berdasarkan Tanggal")
@@ -323,4 +324,5 @@ elif menu == "Kelola Data":
                     st.success(f"✅ Data No {selected_id} telah dihapus.")
 
                     st.rerun()
+
 
