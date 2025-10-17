@@ -46,8 +46,7 @@ def login():
         st.info(
             "👥 **Panduan Login:**\n"
             "- **User umum** → username: `user`, password: `user123`\n"
-            "- **FOD** → username: `fod`, password: `fod123`\n\n"
-            "🛈 Gunakan kredensial sesuai peran Anda."
+            "🛈 FOD menggunakan user & pass yang telah diatur."
         )
 
         with st.form("login_form", clear_on_submit=False):
@@ -79,4 +78,5 @@ def logout():
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.toast("Anda telah logout.", icon="👋")
+
         st.rerun()
