@@ -8,8 +8,7 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
     """
     Membuat peta interaktif banjir rob menggunakan Folium.
     - Otomatis zoom ke provinsi / kabupaten jika filter diisi.
-    - Menampilkan popup dengan gambar (jika ada).
-    - Menangani error agar tidak crash saat data kosong atau invalid.
+    - Menampilkan popup dengan gambar dari link URL (tidak lagi dari GDrive/lokal).
     """
     default_center = [-2.5489, 118.0149]  # Titik tengah Indonesia
     m = folium.Map(location=default_center, zoom_start=5)
@@ -25,7 +24,7 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
 
     if not valid_records:
         st.warning("⚠️ Tidak ada titik dengan koordinat valid untuk ditampilkan di peta.")
-        return st_folium(m, height=900, use_container_width=True)
+        return st_folium(m, height=900)
 
     lat_center, lon_center = None, None
 
@@ -69,18 +68,7 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
         tgl = r.get("Tanggal", "")
         img = r.get("Gambar", "")
 
-        # --- Perbaikan agar link Google Drive bisa tampil langsung ---
-        if img and "drive.google.com" in img:
-            if "uc?id=" not in img:
-                # Ambil file_id dari berbagai format URL
-                if "/d/" in img:
-                    file_id = img.split("/d/")[1].split("/")[0]
-                    img = f"https://drive.google.com/uc?export=view&id={file_id}"
-                elif "id=" in img:
-                    file_id = img.split("id=")[-1]
-                    img = f"https://drive.google.com/uc?export=view&id={file_id}"
-
-        # Buat konten popup
+        # Buat popup HTML
         popup_html = f"""
         <b>{lokasi}</b><br>
         {kab}, {prov}<br>
@@ -89,7 +77,7 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
         if img:
             popup_html += f'<img src="{img}" width="220"><br>'
         else:
-            popup_html += "<i>📷 Gambar tidak tersedia</i><br>"
+            popup_html += "<i>📷 Tidak ada gambar</i><br>"
 
         # Tambahkan marker ke peta
         try:
@@ -100,7 +88,7 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
             ).add_to(m)
             bounds.append([lat, lon])
         except Exception:
-            continue  # jika ada data yang tidak valid, skip
+            continue  # lewati jika ada error koordinat
 
     # ==== Auto zoom ====
     if not provinsi_filter and not kabupaten_filter:
@@ -110,4 +98,4 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
         elif len(bounds) > 1:
             m.fit_bounds(bounds)
 
-    return st_folium(m, height=900, use_container_width=True)
+    return st_folium(m, height=900)
