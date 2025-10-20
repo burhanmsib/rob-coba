@@ -3,7 +3,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 import io
-import os
 import requests
 from PIL import Image as PILImage, UnidentifiedImageError
 
@@ -15,8 +14,6 @@ def generate_event_pdf(record):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     styles = getSampleStyleSheet()
-
-    # Tambahan style agar teks rapi dan rata kiri-kanan
     styles.add(ParagraphStyle(name="Justify", alignment=4, leading=15))
 
     elements = []
@@ -36,7 +33,7 @@ def generate_event_pdf(record):
     elements.append(Paragraph(info_text, styles["Justify"]))
     elements.append(Spacer(1, 20))
 
-    # ======= Tambahkan Gambar (jika ada) =======
+    # ======= Gambar (jika ada) =======
     img_url = record.get("Gambar", "")
     if img_url:
         try:
@@ -50,7 +47,6 @@ def generate_event_pdf(record):
     else:
         elements.append(Paragraph("📷 Tidak ada dokumentasi foto untuk kejadian ini.", styles["Normal"]))
 
-    # Build PDF
     doc.build(elements)
     buffer.seek(0)
     return buffer
@@ -84,7 +80,6 @@ def generate_multiple_events_pdf(records, tanggal):
             story.append(Paragraph(f"Koordinat: {latitude}, {longitude}", styles["Normal"]))
             story.append(Spacer(1, 8))
 
-            # Tambahkan gambar (jika ada)
             if gambar:
                 try:
                     img_data = load_image_from_url(gambar)
@@ -110,16 +105,15 @@ def generate_multiple_events_pdf(records, tanggal):
 # =======================
 def load_image_from_url(url):
     """
-    Ambil gambar dari URL (mis. Google Drive) atau path lokal dan
-    kembalikan BytesIO agar kompatibel dengan Streamlit Cloud.
+    Ambil gambar dari URL publik (termasuk Google Drive yang dibagikan).
+    Tidak lagi mendukung path lokal.
     """
     if not url:
         return None
 
     try:
-        # Deteksi apakah URL adalah Google Drive
+        # Konversi URL Google Drive agar bisa diakses langsung
         if "drive.google.com" in url:
-            # Ubah link berbagi ke format langsung tampil
             if "id=" in url:
                 file_id = url.split("id=")[-1]
             elif "/d/" in url:
@@ -129,22 +123,14 @@ def load_image_from_url(url):
             if file_id:
                 url = f"https://drive.google.com/uc?export=view&id={file_id}"
 
-        # Jika URL online
-        if url.startswith("http"):
-            headers = {"User-Agent": "Mozilla/5.0"}
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
 
-            img_data = io.BytesIO(response.content)
-            pil_img = PILImage.open(img_data)
-            pil_img.verify()
-
-            img_data.seek(0)
-            return img_data
-
-        # Jika path lokal
-        elif os.path.exists(url):
-            return url
+        img_data = io.BytesIO(response.content)
+        PILImage.open(img_data).verify()
+        img_data.seek(0)
+        return img_data
 
     except (requests.RequestException, UnidentifiedImageError):
         return None
