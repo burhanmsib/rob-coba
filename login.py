@@ -36,7 +36,7 @@ def login():
 
     # Judul login
     st.markdown(
-        "<h2 style='text-align: center; font-size: 40px; color: white;'>🔐 LOGIN</h2>",
+        "<h2 style='text-align: center; font-size: 40px; color: black;'>LOGIN</h2>",
         unsafe_allow_html=True
     )
 
@@ -80,4 +80,5 @@ def logout():
         st.toast("Anda telah logout.", icon="👋")
 
         st.rerun()
+
 
