@@ -60,7 +60,7 @@ def load_for_dashboard():
 
 # ======================== DASHBOARD ========================
 if menu == "Dashboard":
-    st.subheader("📍 Peta Kejadian Banjir Rob")
+    st.subheader("Peta Kejadian Banjir Rob")
 
     data = load_for_dashboard()
 
@@ -324,5 +324,6 @@ elif menu == "Kelola Data":
                     st.success(f"✅ Data No {selected_id} telah dihapus.")
 
                     st.rerun()
+
 
 
