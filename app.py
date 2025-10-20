@@ -3,9 +3,8 @@ import pandas as pd
 import time
 from datetime import datetime
 from modules import crud
-from modules.utils import save_uploaded_file, safe_float, parse_date_safe, to_db_date_str
+from modules.utils import safe_float, parse_date_safe, to_db_date_str
 from modules.map_visualization import create_map
-from modules.gdrive_utils import upload_to_gdrive
 from login import login, logout
 from pdf import generate_event_pdf, generate_multiple_events_pdf
 import requests  # ✅ Penting untuk hosting cloud
@@ -60,14 +59,13 @@ def load_for_dashboard():
 
 # ======================== DASHBOARD ========================
 if menu == "Dashboard":
-    st.subheader("Peta Kejadian Banjir Rob")
+    st.subheader("📍 Peta Kejadian Banjir Rob")
 
     data = load_for_dashboard()
 
     if not data:
         st.info("Belum ada data atau tidak ada yang cocok dengan filter.")
     else:
-        # ✅ Auto zoom berdasarkan filter provinsi/kabupaten
         create_map(data, provinsi_filter=provinsi_filter, kabupaten_filter=kabupaten_filter)
 
         df = pd.DataFrame(data)
@@ -80,13 +78,12 @@ if menu == "Dashboard":
             data=df.to_csv(index=False).encode("utf-8"),
             file_name="data_banjir_rob.csv",
             mime="text/csv",
-            key="download_csv_all"
         )
-        
+
         # ====== SOROTAN TERBARU ======
         st.subheader("📰 Sorotan Terbaru")
         latest = df.sort_values("Tanggal", ascending=False).head(3)
-        
+
         for _, row in latest.iterrows():
             c1, c2 = st.columns([2, 1])
             with c1:
@@ -101,18 +98,17 @@ if menu == "Dashboard":
                     mime="application/pdf",
                     key=f"pdf_{row['No']}"
                 )
-        
+
             with c2:
                 img_url = row.get("Gambar", "")
-        
-                # ✅ Konversi URL Google Drive agar bisa tampil langsung
+
+                # Konversi link Google Drive agar bisa ditampilkan langsung
                 if img_url and "drive.google.com" in img_url:
                     if "uc?id=" not in img_url:
                         if "/d/" in img_url:
                             file_id = img_url.split("/d/")[1].split("/")[0]
                             img_url = f"https://drive.google.com/uc?export=view&id={file_id}"
-        
-                # ✅ Cek apakah gambar dapat dimuat
+
                 if img_url:
                     try:
                         headers = {"User-Agent": "Mozilla/5.0"}
@@ -121,11 +117,10 @@ if menu == "Dashboard":
                             st.image(img_url, caption=row["Lokasi"], width=300)
                         else:
                             st.caption("⚠️ Gambar tidak tersedia.")
-                    except Exception as e:
-                        st.caption(f"⚠️ Gagal memuat gambar: {str(e)[:50]}")
+                    except Exception:
+                        st.caption("⚠️ Gagal memuat gambar.")
                 else:
                     st.caption("📷 Tidak ada dokumentasi foto.")
-
 
         # ====== DOWNLOAD BERDASARKAN TANGGAL ======
         st.subheader("📅 Download Laporan Berdasarkan Tanggal")
@@ -204,24 +199,12 @@ elif menu == "Tambah Data":
             with col2:
                 longitude = st.number_input("Longitude", format="%.8f")
 
-            st.markdown("**📸 Dokumentasi Foto** (pilih salah satu)")
+            st.markdown("**📸 Dokumentasi Foto (masukkan URL gambar publik)**")
             gambar_link = st.text_input("Link Gambar (URL)")
-            gambar_upload = st.file_uploader("Upload Foto (jpg/png)", type=["jpg", "jpeg", "png"])
 
             submitted = st.form_submit_button("💾 Simpan Data")
 
             if submitted:
-                if gambar_upload is not None and gambar_link.strip():
-                    st.error("❌ Pilih salah satu saja: Upload gambar ATAU masukkan link gambar.")
-                    st.stop()
-
-                gambar_final = ""
-                if gambar_upload is not None:
-                    temp_path = save_uploaded_file(gambar_upload)
-                    gambar_final = upload_to_gdrive(temp_path, gambar_upload.name)
-                elif gambar_link.strip():
-                    gambar_final = gambar_link.strip()
-
                 crud.insert_data(
                     tanggal=to_db_date_str(tgl),
                     lokasi=lokasi,
@@ -229,7 +212,7 @@ elif menu == "Tambah Data":
                     provinsi=provinsi,
                     latitude=safe_float(latitude),
                     longitude=safe_float(longitude),
-                    gambar=gambar_final
+                    gambar=gambar_link.strip() if gambar_link else ""
                 )
                 st.success("✅ Data berhasil ditambahkan.")
 
@@ -285,25 +268,12 @@ elif menu == "Kelola Data":
                             "Longitude", value=safe_float(rec.get("Longitude")), format="%.8f"
                         )
 
-                    st.markdown("**📷 Dokumentasi Foto**")
+                    st.markdown("**📷 Link Gambar (URL)**")
                     gambar_link_u = st.text_input("Link Gambar (URL)", rec.get("Gambar", "") or "")
-                    gambar_upload_u = st.file_uploader(
-                        "Upload Foto Baru (opsional)", type=["jpg", "jpeg", "png"], key=f"up_{selected_id}"
-                    )
 
                     update_btn = st.form_submit_button("💾 Simpan Perubahan")
 
                     if update_btn:
-                        gambar_final_u = rec.get("Gambar", "") or ""
-
-                        if gambar_upload_u is not None:
-                            temp_path = save_uploaded_file(gambar_upload_u)
-                            gambar_final_u = upload_to_gdrive(temp_path, gambar_upload_u.name)
-                        elif gambar_link_u.strip():
-                            gambar_final_u = gambar_link_u.strip()
-                        elif not gambar_link_u.strip() and gambar_upload_u is None:
-                            gambar_final_u = ""
-
                         crud.update_data(
                             no_id=selected_id,
                             tanggal=to_db_date_str(tgl_u),
@@ -312,7 +282,7 @@ elif menu == "Kelola Data":
                             provinsi=provinsi_u,
                             latitude=safe_float(latitude_u),
                             longitude=safe_float(longitude_u),
-                            gambar=gambar_final_u
+                            gambar=gambar_link_u.strip()
                         )
                         st.success("✅ Data berhasil diperbarui.")
                         time.sleep(1)
@@ -322,8 +292,4 @@ elif menu == "Kelola Data":
                 if st.button("🗑 Hapus Data Ini", type="primary", key=f"del_{selected_id}"):
                     crud.delete_data(selected_id)
                     st.success(f"✅ Data No {selected_id} telah dihapus.")
-
                     st.rerun()
-
-
-
