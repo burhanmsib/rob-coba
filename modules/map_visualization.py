@@ -98,4 +98,5 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
         elif len(bounds) > 1:
             m.fit_bounds(bounds)
 
-    return st_folium(m, height=900)
+    return st_folium(m, height=900, use_container_width=True)
+
