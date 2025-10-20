@@ -1,42 +1,5 @@
-import os
 from datetime import datetime, date
 from decimal import Decimal
-import streamlit as st
-
-# ======================== KONFIGURASI UPLOAD ========================
-# Gunakan direktori temporary bawaan Streamlit Cloud agar kompatibel
-UPLOAD_DIR = os.path.join(st.experimental_get_script_run_ctx().session_id if hasattr(st, "experimental_get_script_run_ctx") else os.getcwd(), "temp_uploads")
-
-# Pastikan folder ada
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-
-# ======================== FILE HANDLING ========================
-def save_uploaded_file(uploaded_file):
-    """
-    Simpan file upload ke folder sementara dan kembalikan path lengkap.
-    Aman untuk Streamlit Cloud dan lingkungan lokal.
-    """
-    if uploaded_file is None:
-        return None
-
-    # Nama file aman (hapus path)
-    filename = os.path.basename(uploaded_file.name)
-    file_path = os.path.join(UPLOAD_DIR, filename)
-
-    # Jika nama sudah ada → tambahkan angka unik
-    base, ext = os.path.splitext(file_path)
-    counter, final_path = 1, file_path
-    while os.path.exists(final_path):
-        final_path = f"{base}_{counter}{ext}"
-        counter += 1
-
-    # Simpan ke disk sementara
-    with open(final_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-
-    return final_path  # tidak perlu st.info agar UI tetap bersih
-
 
 # ======================== KONVERSI NUMERIK ========================
 def safe_float(value, default=0.0):
