@@ -24,7 +24,7 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
 
     if not valid_records:
         st.warning("⚠️ Tidak ada titik dengan koordinat valid untuk ditampilkan di peta.")
-        return st_folium(m, height=900)
+        return st_folium(m, height=900, use_container_width=True)
 
     lat_center, lon_center = None, None
 
@@ -99,4 +99,5 @@ def create_map(records, provinsi_filter=None, kabupaten_filter=None):
             m.fit_bounds(bounds)
 
     return st_folium(m, height=900, use_container_width=True)
+
 
