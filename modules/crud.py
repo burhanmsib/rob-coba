@@ -30,14 +30,12 @@ def fetch_all_data():
     if not conn:
         return []
     cur = conn.cursor(dictionary=True)
-    cur.execute(
-        f"""
+    cur.execute(f"""
         SELECT `No`, `Tanggal`, `Lokasi`, `Kabupaten`, `Provinsi`,
                `Latitude`, `Longitude`, `Gambar`
         FROM `{TABLE_NAME}`
         ORDER BY `Tanggal` DESC, `No` DESC
-        """
-    )
+    """)
     rows = cur.fetchall()
     cur.close()
     conn.close()
