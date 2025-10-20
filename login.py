@@ -74,11 +74,12 @@ def logout():
     """
     Logout user: hapus session state dan rerun aplikasi.
     """
-    if st.sidebar.button("🚪 Logout", use_container_width=True):
+    if st.sidebar.button("Logout", use_container_width=True):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.toast("Anda telah logout.", icon="👋")
 
         st.rerun()
+
 
 
